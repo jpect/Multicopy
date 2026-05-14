@@ -1,4 +1,5 @@
 using System.IO;
+using Multicopy2.Models;
 using Multicopy2.Services;
 using Xunit;
 
@@ -151,5 +152,81 @@ public class CopyServiceTests : IDisposable
         await CopyService.CopyToDirectoryAsync(_src, _dst, false, false, NullProgress(), CancellationToken.None);
 
         Assert.Empty(Directory.EnumerateFileSystemEntries(_dst));
+    }
+
+    // ── Multi-source mode tests ────────────────────────────────────────────────
+
+    [Fact]
+    public async Task MultiSource_Files_PlacesEachAtDestRoot()
+    {
+        WriteFile(Path.Combine(_src, "alpha.txt"), "A");
+        WriteFile(Path.Combine(_src, "beta.dat"), "B");
+
+        var sources = new[]
+        {
+            new CopySource(Path.Combine(_src, "alpha.txt"), IsFolder: false),
+            new CopySource(Path.Combine(_src, "beta.dat"),  IsFolder: false),
+        };
+
+        await CopyService.CopyToDirectoryAsync(sources, _dst, false, false, NullProgress(), CancellationToken.None);
+
+        Assert.Equal("A", File.ReadAllText(Path.Combine(_dst, "alpha.txt")));
+        Assert.Equal("B", File.ReadAllText(Path.Combine(_dst, "beta.dat")));
+    }
+
+    [Fact]
+    public async Task MultiSource_Folder_IncludeFolderNameTrue_PreservesName()
+    {
+        string folder = Path.Combine(_src, "MyDrivers");
+        WriteFile(Path.Combine(folder, "driver.sys"), "x");
+        WriteFile(Path.Combine(folder, "sub", "nested.txt"), "y");
+
+        var sources = new[] { new CopySource(folder, IsFolder: true, IncludeFolderName: true) };
+
+        await CopyService.CopyToDirectoryAsync(sources, _dst, false, false, NullProgress(), CancellationToken.None);
+
+        Assert.Equal("x", File.ReadAllText(Path.Combine(_dst, "MyDrivers", "driver.sys")));
+        Assert.Equal("y", File.ReadAllText(Path.Combine(_dst, "MyDrivers", "sub", "nested.txt")));
+    }
+
+    [Fact]
+    public async Task MultiSource_Folder_IncludeFolderNameFalse_FlattensToRoot()
+    {
+        string folder = Path.Combine(_src, "MyDrivers");
+        WriteFile(Path.Combine(folder, "driver.sys"), "x");
+
+        var sources = new[] { new CopySource(folder, IsFolder: true, IncludeFolderName: false) };
+
+        await CopyService.CopyToDirectoryAsync(sources, _dst, false, false, NullProgress(), CancellationToken.None);
+
+        Assert.True(File.Exists(Path.Combine(_dst, "driver.sys")));
+        Assert.False(Directory.Exists(Path.Combine(_dst, "MyDrivers")));
+    }
+
+    [Fact]
+    public async Task MultiSource_MixedFilesAndFolders_AllLandCorrectly()
+    {
+        WriteFile(Path.Combine(_src, "loose.txt"), "loose");
+        WriteFile(Path.Combine(_src, "stuff", "deep.txt"), "deep");
+
+        var sources = new[]
+        {
+            new CopySource(Path.Combine(_src, "loose.txt"),     IsFolder: false),
+            new CopySource(Path.Combine(_src, "stuff"),         IsFolder: true,  IncludeFolderName: true),
+        };
+
+        await CopyService.CopyToDirectoryAsync(sources, _dst, false, false, NullProgress(), CancellationToken.None);
+
+        Assert.Equal("loose", File.ReadAllText(Path.Combine(_dst, "loose.txt")));
+        Assert.Equal("deep",  File.ReadAllText(Path.Combine(_dst, "stuff", "deep.txt")));
+    }
+
+    [Fact]
+    public async Task MultiSource_MissingFile_ThrowsFileNotFound()
+    {
+        var sources = new[] { new CopySource(Path.Combine(_src, "ghost.txt"), IsFolder: false) };
+
+        await Assert.ThrowsAsync<FileNotFoundException>(() =>
+            CopyService.CopyToDirectoryAsync(sources, _dst, false, false, NullProgress(), CancellationToken.None));
     }
 }

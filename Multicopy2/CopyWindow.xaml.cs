@@ -9,7 +9,8 @@ namespace Multicopy2;
 
 public partial class CopyWindow : Window
 {
-    private readonly string _sourcePath;
+    private readonly IList<CopySource> _sources;
+    private readonly string _sourceDescription;
     private readonly List<DriveInfo> _drives;
     private readonly bool _eraseBefore;
     private readonly bool _overwrite;
@@ -22,7 +23,8 @@ public partial class CopyWindow : Window
     public ObservableCollection<DriveProgress> DriveProgressItems { get; } = [];
 
     public CopyWindow(
-        string sourcePath,
+        IList<CopySource> sources,
+        string sourceDescription,
         List<DriveInfo> drives,
         bool eraseBefore,
         bool overwrite,
@@ -34,7 +36,8 @@ public partial class CopyWindow : Window
         DataContext = this;
         Owner = owner;
 
-        _sourcePath = sourcePath;
+        _sources = sources;
+        _sourceDescription = sourceDescription;
         _drives = drives;
         _eraseBefore = eraseBefore;
         _overwrite = overwrite;
@@ -51,7 +54,7 @@ public partial class CopyWindow : Window
     {
         int count = _drives.Count;
         HeaderText.Text = $"Copying to {count} drive{(count != 1 ? "s" : "")}...";
-        SubHeaderText.Text = $"Source: {_sourcePath}";
+        SubHeaderText.Text = $"Source: {_sourceDescription}";
         SummaryText.Text = $"0 of {count} complete";
 
         try
@@ -68,7 +71,11 @@ public partial class CopyWindow : Window
                 {
                     var dp = DriveProgressItems[i];
                     if (dp.Status != CopyStatus.Done) continue;
-                    try { _drives[i].VolumeLabel = _volumeName; }
+                    try
+                    {
+                        _drives[i].VolumeLabel = _volumeName;
+                        dp.RefreshVolumeLabel();
+                    }
                     catch (Exception ex)
                     {
                         dp.Warning = $"label not set ({ex.Message})";
@@ -123,7 +130,7 @@ public partial class CopyWindow : Window
 
         try
         {
-            await CopyService.CopyToDriveAsync(_sourcePath, drive, _eraseBefore, _overwrite, progress, _cts.Token);
+            await CopyService.CopyToDriveAsync(_sources, drive, _eraseBefore, _overwrite, progress, _cts.Token);
             dp.BytesCopied = dp.TotalBytes;
             dp.CurrentFile = "";
             dp.Status = CopyStatus.Done;

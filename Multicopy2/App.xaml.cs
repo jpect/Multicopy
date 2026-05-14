@@ -64,7 +64,8 @@ public partial class App : Application
                 }
                 else
                 {
-                    var copy = new CopyWindow(tempSource, drives, false, false, false, "", main)
+                    var sources = new[] { new Models.CopySource(tempSource, IsFolder: true) };
+                    var copy = new CopyWindow(sources, tempSource, drives, false, false, false, "", main)
                     {
                         Left = -10000,
                         Top = -10000,

@@ -9,6 +9,8 @@ namespace Multicopy2;
 public partial class MainWindow : Window
 {
     public ObservableCollection<DriveSelectionItem> DriveItems { get; } = [];
+    public ObservableCollection<string> FileItems { get; } = [];
+    public ObservableCollection<SourceDriveItem> SourceDriveItems { get; } = [];
 
     public MainWindow()
     {
@@ -16,18 +18,66 @@ public partial class MainWindow : Window
         DataContext = this;
     }
 
-    private void Window_Loaded(object sender, RoutedEventArgs e) => RefreshDrives();
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        RefreshDrives();
+        RefreshSourceDrives();
+    }
+
+    // ── Mode switching ─────────────────────────────────────────────────────────
+
+    private void SourceMode_Changed(object sender, RoutedEventArgs e)
+    {
+        if (FolderModePanel is null) return; // can fire before InitializeComponent finishes
+
+        FolderModePanel.Visibility = ModeFolder.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        FilesModePanel.Visibility  = ModeFiles.IsChecked  == true ? Visibility.Visible : Visibility.Collapsed;
+        DriveModePanel.Visibility  = ModeDrive.IsChecked  == true ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // ── Folder mode ────────────────────────────────────────────────────────────
 
     private void BrowseSource_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFolderDialog
-        {
-            Title = "Select the source folder to copy"
-        };
-
+        var dialog = new OpenFolderDialog { Title = "Select the source folder" };
         if (dialog.ShowDialog(this) == true)
             SourceBox.Text = dialog.FolderName;
     }
+
+    // ── Files mode ─────────────────────────────────────────────────────────────
+
+    private void AddFiles_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Select files to copy",
+            Multiselect = true
+        };
+        if (dialog.ShowDialog(this) == true)
+        {
+            foreach (var path in dialog.FileNames)
+                if (!FileItems.Contains(path))
+                    FileItems.Add(path);
+        }
+    }
+
+    private void ClearFiles_Click(object sender, RoutedEventArgs e) => FileItems.Clear();
+
+    // ── Drive mode ─────────────────────────────────────────────────────────────
+
+    private void RescanSourceDrives_Click(object sender, RoutedEventArgs e) => RefreshSourceDrives();
+
+    private void RefreshSourceDrives()
+    {
+        SourceDriveItems.Clear();
+        foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady))
+            SourceDriveItems.Add(new SourceDriveItem(drive));
+
+        if (SourceDriveItems.Count > 0 && SourceDriveCombo.SelectedIndex < 0)
+            SourceDriveCombo.SelectedIndex = 0;
+    }
+
+    // ── Destination drives ─────────────────────────────────────────────────────
 
     private void Rescan_Click(object sender, RoutedEventArgs e) => RefreshDrives();
 
@@ -53,32 +103,48 @@ public partial class MainWindow : Window
         }
     }
 
+    // ── Start copy ─────────────────────────────────────────────────────────────
+
     private void StartCopy_Click(object sender, RoutedEventArgs e)
     {
-        var errors = Validate(out var selectedDrives, out string sourcePath);
-        if (errors.Count > 0)
+        var errors = new List<string>();
+        var selectedDrives = DriveItems.Where(d => d.IsSelected).Select(d => d.Drive).ToList();
+        if (selectedDrives.Count == 0)
+            errors.Add("• No destination drives selected.");
+
+        bool setName  = OptionSetName.IsChecked == true;
+        string volName = OptionVolumeNameBox.Text.Trim();
+        if (setName && string.IsNullOrWhiteSpace(volName))
+            errors.Add("• Volume name is empty — enter a name or uncheck the option.");
+
+        List<CopySource> sources;
+        string description;
+
+        try
         {
-            MessageBox.Show(
-                string.Join("\n", errors),
-                "Please fix the following",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            (sources, description) = BuildSources(errors, selectedDrives);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Source error:\n\n{ex.Message}", "Multicopy", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
-        bool erase   = OptionEraseBefore.IsChecked == true;
-        bool overwrite = OptionOverwrite.IsChecked == true;
-        bool setName = OptionSetName.IsChecked == true;
-        string volName = OptionVolumeNameBox.Text.Trim();
+        if (errors.Count > 0)
+        {
+            MessageBox.Show(string.Join("\n", errors), "Please fix the following",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        bool erase     = OptionEraseBefore.IsChecked == true;
+        bool overwrite = OptionOverwrite.IsChecked  == true;
 
         if (erase)
         {
             var confirm = MessageBox.Show(
                 $"This will permanently delete all contents from {selectedDrives.Count} drive(s) before copying.\n\nAre you sure?",
-                "Confirm Erase",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
+                "Confirm Erase", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (confirm != MessageBoxResult.Yes) return;
         }
 
@@ -89,34 +155,62 @@ public partial class MainWindow : Window
                 "Most USB drives use FAT32 or exFAT, which only support up to 11 characters " +
                 "for volume names. Drives that reject the name will keep their existing label " +
                 "(the copy still succeeds).\n\nContinue anyway?",
-                "Volume name may be too long",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
+                "Volume name may be too long", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (lengthWarn != MessageBoxResult.Yes) return;
         }
 
-        var copyWindow = new CopyWindow(sourcePath, selectedDrives, erase, overwrite, setName, volName, this);
+        var copyWindow = new CopyWindow(sources, description, selectedDrives, erase, overwrite, setName, volName, this);
         copyWindow.ShowDialog();
     }
 
-    private List<string> Validate(out List<DriveInfo> selectedDrives, out string sourcePath)
+    private (List<CopySource> sources, string description) BuildSources(List<string> errors, List<DriveInfo> destDrives)
     {
-        var errors = new List<string>();
-        sourcePath = SourceBox.Text;
-        selectedDrives = DriveItems.Where(d => d.IsSelected).Select(d => d.Drive).ToList();
+        if (ModeFolder.IsChecked == true)
+        {
+            string path = SourceBox.Text;
+            if (string.IsNullOrWhiteSpace(path) || path == "(no folder selected)")
+            {
+                errors.Add("• No source folder selected.");
+                return ([], "");
+            }
+            if (!Directory.Exists(path))
+            {
+                errors.Add("• Source folder does not exist.");
+                return ([], "");
+            }
 
-        if (string.IsNullOrWhiteSpace(sourcePath) || sourcePath == "(no folder selected)")
-            errors.Add("• No source folder selected.");
-        else if (!Directory.Exists(sourcePath))
-            errors.Add("• Source folder does not exist.");
+            bool includeName = FolderIncludeName.IsChecked == true;
+            string description = includeName ? $"folder '{new DirectoryInfo(path).Name}' (preserved)" : $"contents of {path}";
+            return ([new CopySource(path, IsFolder: true, IncludeFolderName: includeName)], description);
+        }
 
-        if (selectedDrives.Count == 0)
-            errors.Add("• No drives selected.");
+        if (ModeFiles.IsChecked == true)
+        {
+            if (FileItems.Count == 0)
+            {
+                errors.Add("• No files added — click '+ Add files...' to pick some.");
+                return ([], "");
+            }
+            var sources = FileItems.Select(p => new CopySource(p, IsFolder: false)).ToList();
+            return (sources, $"{FileItems.Count} file(s)");
+        }
 
-        if (OptionSetName.IsChecked == true && string.IsNullOrWhiteSpace(OptionVolumeNameBox.Text))
-            errors.Add("• Volume name is empty — enter a name or uncheck the option.");
+        // Drive mode
+        if (SourceDriveCombo.SelectedItem is not SourceDriveItem item)
+        {
+            errors.Add("• No source drive selected.");
+            return ([], "");
+        }
+        string driveRoot = item.Drive.RootDirectory.FullName;
 
-        return errors;
+        if (destDrives.Any(d => string.Equals(d.Name, item.Drive.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            errors.Add($"• Source drive {item.Drive.Name.TrimEnd('\\')} is also a destination — uncheck it on the right.");
+            return ([], "");
+        }
+
+        return (
+            [new CopySource(driveRoot, IsFolder: true, IncludeFolderName: false)],
+            $"entire drive {item.Drive.Name.TrimEnd('\\')}");
     }
 }

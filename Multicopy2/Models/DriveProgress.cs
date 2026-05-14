@@ -23,13 +23,26 @@ public class DriveProgress : INotifyPropertyChanged
     {
         Drive = drive;
         DriveLetter = drive.Name.TrimEnd('\\');
-        try { VolumeLabel = string.IsNullOrWhiteSpace(drive.VolumeLabel) ? "No Label" : drive.VolumeLabel; }
-        catch { VolumeLabel = "No Label"; }
+        RefreshVolumeLabel();
+    }
+
+    public void RefreshVolumeLabel()
+    {
+        string newLabel;
+        try { newLabel = string.IsNullOrWhiteSpace(Drive.VolumeLabel) ? "No Label" : Drive.VolumeLabel; }
+        catch { newLabel = "No Label"; }
+        VolumeLabel = newLabel;
     }
 
     public DriveInfo Drive { get; }
     public string DriveLetter { get; }
-    public string VolumeLabel { get; }
+
+    private string _volumeLabel = "";
+    public string VolumeLabel
+    {
+        get => _volumeLabel;
+        private set { _volumeLabel = value; OnPropertyChanged(); }
+    }
 
     public long BytesCopied
     {
