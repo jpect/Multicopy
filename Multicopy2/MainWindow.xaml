@@ -1,0 +1,147 @@
+<Window x:Class="Multicopy2.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Multicopy" Height="560" Width="500"
+        ResizeMode="CanMinimize"
+        WindowStartupLocation="CenterScreen"
+        Loaded="Window_Loaded">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,18">
+            <TextBlock Text="Multicopy" FontSize="22" FontWeight="Bold" Foreground="#1976D2"/>
+            <TextBlock Text="Copy a folder to multiple USB drives simultaneously"
+                       FontSize="12" Foreground="#757575" Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <!-- Source Folder -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,16">
+            <TextBlock Style="{StaticResource SectionLabel}" Text="SOURCE FOLDER"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="SourceBox"
+                         Grid.Column="0"
+                         IsReadOnly="True"
+                         Padding="8,6"
+                         VerticalContentAlignment="Center"
+                         Background="#F5F5F5"
+                         BorderBrush="#CCCCCC"
+                         FontSize="12"
+                         Text="(no folder selected)"/>
+                <Button Grid.Column="1"
+                        Content="Browse..."
+                        Margin="8,0,0,0"
+                        Style="{StaticResource SecondaryButton}"
+                        Click="BrowseSource_Click"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Drives -->
+        <Grid Grid.Row="2" Margin="0,0,0,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Style="{StaticResource SectionLabel}" Text="USB DRIVES" VerticalAlignment="Center"/>
+                <Button Grid.Column="1"
+                        Content="⟳  Rescan"
+                        Style="{StaticResource SecondaryButton}"
+                        Click="Rescan_Click"/>
+            </Grid>
+
+            <Border Grid.Row="1"
+                    BorderBrush="#CCCCCC"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="DriveItemsControl"
+                                  ItemsSource="{Binding DriveItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                          Padding="6,4"
+                                          Margin="4,2"
+                                          Cursor="Hand">
+                                    <TextBlock Text="{Binding DisplayText}"
+                                               FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <Setter Property="Margin" Value="0"/>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Options -->
+        <Border Grid.Row="3"
+                BorderBrush="#CCCCCC"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12,10"
+                Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionLabel}" Text="OPTIONS" Margin="0,0,0,8"/>
+
+                <CheckBox x:Name="OptionEraseBefore"
+                          Content="Erase drive contents before copying"
+                          FontSize="12"
+                          Margin="0,3"/>
+
+                <CheckBox x:Name="OptionOverwrite"
+                          Content="Overwrite existing files"
+                          FontSize="12"
+                          Margin="0,3"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,3">
+                    <CheckBox x:Name="OptionSetName"
+                              Content="Set volume name:"
+                              FontSize="12"
+                              VerticalAlignment="Center"
+                              Checked="OptionSetName_Changed"
+                              Unchecked="OptionSetName_Changed"/>
+                    <TextBox x:Name="OptionVolumeNameBox"
+                             Width="150"
+                             Margin="10,0,0,0"
+                             Padding="6,3"
+                             IsEnabled="False"
+                             FontSize="12"
+                             BorderBrush="#CCCCCC"
+                             MaxLength="32"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Start Button -->
+        <Button Grid.Row="4"
+                x:Name="StartButton"
+                Content="Start Copy  →"
+                FontSize="14"
+                FontWeight="SemiBold"
+                Padding="0,12"
+                Style="{StaticResource PrimaryButton}"
+                Click="StartCopy_Click"/>
+    </Grid>
+</Window>

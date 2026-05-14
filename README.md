@@ -1,11 +1,45 @@
 # Multicopy
-## Easily copy a directory to multiple USB drives
+## Copy a folder to multiple USB drives simultaneously
 
-[![Build status](https://ci.appveyor.com/api/projects/status/nfugrhfo5pkyk85f?svg=true)](https://ci.appveyor.com/project/robertphipps/multicopy)
+Forked from [rphi/Multicopy](https://github.com/rphi/Multicopy) and rebuilt for modern Windows.
 
-This software should hopefully make it easy, and relatively quick to copy files to
-a large number of memory sticks simultaneously, using Tasks for multithreading.
+---
 
-![screenshot](https://raw.githubusercontent.com/robertphipps/Multicopy/master/screenshot.JPG)
+### Multicopy2 — Modern Rebuild (WPF · .NET 9)
 
-Tested on Windows 10 Pro 64 bit (version 1511 build 10586.420)
+`Multicopy2/` is a ground-up rewrite that fixes several issues in the original and adds new features:
+
+**Bug fixes vs. original:**
+- UI no longer freezes during copy — uses `async/await` throughout
+- Erase logic was broken (used `VolumeLabel` as a path); now correctly clears root directory contents
+
+**New features:**
+- Per-drive progress bars with percentage, bytes copied / total
+- Live copy speed (MB/s) and ETA per drive
+- Overwrite existing files option
+- Cancel button — stops all drives at the next file boundary
+- Drives remember their checked state across rescans
+- Validation before copy starts with clear error messages
+
+**Requirements:**
+- Windows 10 or 11 (64-bit)
+- [.NET 9 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) (or SDK to build)
+
+**Build:**
+```
+dotnet build Multicopy2/Multicopy2.csproj -c Release
+```
+
+**Run:**
+```
+dotnet run --project Multicopy2/Multicopy2.csproj
+```
+
+Or open `Multicopy2.sln` in Visual Studio 2022.
+
+---
+
+### Original (Multicopy/)
+
+The original .NET 4.6.1 WinForms project is preserved in `Multicopy/` for reference.
+Tested on Windows 10 Pro 64-bit (version 1511 build 10586.420).

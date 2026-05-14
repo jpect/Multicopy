@@ -1,0 +1,155 @@
+<Window x:Class="Multicopy2.CopyWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Multicopy — Copying" Height="520" Width="600"
+        ResizeMode="CanResize"
+        MinHeight="360" MinWidth="460"
+        WindowStartupLocation="CenterOwner"
+        Closing="Window_Closing">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock x:Name="HeaderText"
+                       FontSize="16" FontWeight="SemiBold" Foreground="#212121"/>
+            <TextBlock x:Name="SubHeaderText"
+                       FontSize="11" Foreground="#757575" Margin="0,3,0,0"
+                       TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+
+        <!-- Per-drive progress list -->
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Margin="0,0,0,16">
+            <ItemsControl ItemsSource="{Binding DriveProgressItems}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,10"
+                                Padding="14,12"
+                                Background="#FAFAFA"
+                                BorderBrush="#E0E0E0"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Drive header row -->
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding DriveLetter}"
+                                               FontSize="14" FontWeight="Bold"
+                                               Foreground="#212121"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text=" — " FontSize="14" Foreground="#9E9E9E"/>
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding VolumeLabel}"
+                                               FontSize="14" Foreground="#616161"/>
+                                    <TextBlock Grid.Column="3"
+                                               Text="{Binding StatusDisplay}"
+                                               FontSize="11"
+                                               Foreground="{Binding StatusColor}"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- Progress bar -->
+                                <ProgressBar Grid.Row="1"
+                                             Margin="0,0,0,6"
+                                             Value="{Binding ProgressPercent}"
+                                             Maximum="100"/>
+
+                                <!-- Percentage + size -->
+                                <Grid Grid.Row="2" Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding ProgressPercent, StringFormat={}{0:F0}%}"
+                                               FontSize="11" FontWeight="SemiBold"
+                                               Foreground="#1976D2"/>
+                                    <TextBlock Grid.Column="2"
+                                               FontSize="11" Foreground="#757575">
+                                        <Run Text="{Binding BytesCopiedDisplay}"/>
+                                        <Run Text=" / "/>
+                                        <Run Text="{Binding TotalBytesDisplay}"/>
+                                    </TextBlock>
+                                </Grid>
+
+                                <!-- Speed + ETA + current file -->
+                                <Grid Grid.Row="3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding CurrentFile}"
+                                               FontSize="10"
+                                               Foreground="#9E9E9E"
+                                               TextTrimming="CharacterEllipsis"
+                                               FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SpeedDisplay}"
+                                               FontSize="11"
+                                               Foreground="#555"
+                                               Margin="12,0,8,0"/>
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding EtaDisplay}"
+                                               FontSize="11"
+                                               Foreground="#555"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Footer: summary + buttons -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="SummaryText"
+                       Grid.Column="0"
+                       VerticalAlignment="Center"
+                       FontSize="11"
+                       Foreground="#555555"/>
+
+            <Button Grid.Column="1"
+                    x:Name="CancelBtn"
+                    Content="Cancel"
+                    Margin="0,0,10,0"
+                    Style="{StaticResource SecondaryButton}"
+                    Click="Cancel_Click"/>
+
+            <Button Grid.Column="2"
+                    x:Name="CloseBtn"
+                    Content="Close"
+                    IsEnabled="False"
+                    Style="{StaticResource PrimaryButton}"
+                    Click="Close_Click"/>
+        </Grid>
+    </Grid>
+</Window>
