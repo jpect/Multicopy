@@ -102,14 +102,18 @@ public partial class CopyWindow : Window
 
         var progress = new Progress<CopyProgressUpdate>(update =>
         {
-            dp.BytesCopied = update.BytesCopied;
-            dp.TotalBytes  = update.TotalBytes;
-            dp.SpeedMbps   = update.SpeedBytesPerSecond / 1_048_576.0;
-            dp.Eta         = update.Eta;
-            dp.CurrentFile = update.CurrentFile;
+            try
+            {
+                dp.BytesCopied = update.BytesCopied;
+                dp.TotalBytes  = update.TotalBytes;
+                dp.SpeedMbps   = update.SpeedBytesPerSecond / 1_048_576.0;
+                dp.Eta         = update.Eta;
+                dp.CurrentFile = update.CurrentFile;
 
-            int done = DriveProgressItems.Count(d => d.Status is CopyStatus.Done or CopyStatus.Error or CopyStatus.Cancelled);
-            SummaryText.Text = $"{done} of {_drives.Count} complete";
+                int done = DriveProgressItems.Count(d => d.Status is CopyStatus.Done or CopyStatus.Error or CopyStatus.Cancelled);
+                SummaryText.Text = $"{done} of {_drives.Count} complete";
+            }
+            catch { /* progress display failed; copy continues */ }
         });
 
         try

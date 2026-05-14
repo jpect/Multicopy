@@ -71,7 +71,7 @@
                                 <!-- Progress bar -->
                                 <ProgressBar Grid.Row="1"
                                              Margin="0,0,0,6"
-                                             Value="{Binding ProgressPercent}"
+                                             Value="{Binding ProgressPercent, Mode=OneWay}"
                                              Maximum="100"/>
 
                                 <!-- Percentage + size -->
