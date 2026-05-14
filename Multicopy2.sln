@@ -5,6 +5,10 @@ VisualStudioVersion = 17.9.0.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Multicopy2", "Multicopy2\Multicopy2.csproj", "{E5609F89-7C8A-4DA1-A558-5C0698BD81D0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Multicopy2.Tests", "Multicopy2.Tests\Multicopy2.Tests.csproj", "{C6583967-8F80-4DDC-81B9-DF70DBEF8694}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Multicopy2.UiTests", "Multicopy2.UiTests\Multicopy2.UiTests.csproj", "{F3EB6A37-2886-4A5B-8CA1-D2EF7127BDF5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{E5609F89-7C8A-4DA1-A558-5C0698BD81D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E5609F89-7C8A-4DA1-A558-5C0698BD81D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E5609F89-7C8A-4DA1-A558-5C0698BD81D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6583967-8F80-4DDC-81B9-DF70DBEF8694}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6583967-8F80-4DDC-81B9-DF70DBEF8694}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6583967-8F80-4DDC-81B9-DF70DBEF8694}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6583967-8F80-4DDC-81B9-DF70DBEF8694}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3EB6A37-2886-4A5B-8CA1-D2EF7127BDF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3EB6A37-2886-4A5B-8CA1-D2EF7127BDF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3EB6A37-2886-4A5B-8CA1-D2EF7127BDF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3EB6A37-2886-4A5B-8CA1-D2EF7127BDF5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

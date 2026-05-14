@@ -12,9 +12,18 @@ public record CopyProgressUpdate(
 
 public static class CopyService
 {
-    public static async Task CopyToDriveAsync(
+    public static Task CopyToDriveAsync(
         string sourcePath,
         DriveInfo drive,
+        bool eraseBefore,
+        bool overwrite,
+        IProgress<CopyProgressUpdate> progress,
+        CancellationToken ct)
+        => CopyToDirectoryAsync(sourcePath, drive.RootDirectory.FullName, eraseBefore, overwrite, progress, ct);
+
+    public static async Task CopyToDirectoryAsync(
+        string sourcePath,
+        string destPath,
         bool eraseBefore,
         bool overwrite,
         IProgress<CopyProgressUpdate> progress,
@@ -23,14 +32,13 @@ public static class CopyService
         ct.ThrowIfCancellationRequested();
 
         if (eraseBefore)
-            await Task.Run(() => EraseRootContents(drive.RootDirectory), ct);
+            await Task.Run(() => EraseRootContents(new DirectoryInfo(destPath)), ct);
 
         ct.ThrowIfCancellationRequested();
 
         var allFiles = await Task.Run(() => EnumerateFiles(sourcePath), ct);
         long totalBytes = allFiles.Sum(f => f.Length);
         long bytesCopied = 0;
-        string destRoot = drive.RootDirectory.FullName;
         var sw = Stopwatch.StartNew();
 
         foreach (var file in allFiles)
@@ -38,13 +46,13 @@ public static class CopyService
             ct.ThrowIfCancellationRequested();
 
             string relativePath = Path.GetRelativePath(sourcePath, file.FullName);
-            string destPath = Path.Combine(destRoot, relativePath);
-            string? destDir = Path.GetDirectoryName(destPath);
+            string fileDestPath = Path.Combine(destPath, relativePath);
+            string? destDir = Path.GetDirectoryName(fileDestPath);
 
             if (destDir is not null && !Directory.Exists(destDir))
                 Directory.CreateDirectory(destDir);
 
-            await Task.Run(() => file.CopyTo(destPath, overwrite), ct);
+            await Task.Run(() => file.CopyTo(fileDestPath, overwrite), ct);
 
             bytesCopied += file.Length;
 
@@ -67,6 +75,7 @@ public static class CopyService
 
     private static void EraseRootContents(DirectoryInfo root)
     {
+        if (!root.Exists) return;
         foreach (var file in root.GetFiles())
             file.Delete();
         foreach (var dir in root.GetDirectories())

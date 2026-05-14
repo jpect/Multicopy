@@ -17,6 +17,7 @@ public class DriveProgress : INotifyPropertyChanged
     private CopyStatus _status = CopyStatus.Waiting;
     private string _errorMessage = "";
     private string _currentFile = "";
+    private string _warning = "";
 
     public DriveProgress(DriveInfo drive)
     {
@@ -93,6 +94,18 @@ public class DriveProgress : INotifyPropertyChanged
         set { _currentFile = value; OnPropertyChanged(); }
     }
 
+    public string Warning
+    {
+        get => _warning;
+        set
+        {
+            _warning = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(StatusDisplay));
+            OnPropertyChanged(nameof(StatusColor));
+        }
+    }
+
     public bool IsActive => _status == CopyStatus.Copying;
 
     public string BytesCopiedDisplay => FormatBytes(_bytesCopied);
@@ -108,7 +121,9 @@ public class DriveProgress : INotifyPropertyChanged
     {
         CopyStatus.Waiting   => "Waiting...",
         CopyStatus.Copying   => $"{_bytesCopied:N0} / {_totalBytes:N0} bytes",
-        CopyStatus.Done      => $"Done  ({BytesCopiedDisplay})",
+        CopyStatus.Done      => string.IsNullOrEmpty(_warning)
+                                  ? $"Done  ({BytesCopiedDisplay})"
+                                  : $"Done — {_warning}",
         CopyStatus.Cancelled => "Cancelled",
         CopyStatus.Error     => $"Error: {_errorMessage}",
         _                    => ""
@@ -116,7 +131,7 @@ public class DriveProgress : INotifyPropertyChanged
 
     public string StatusColor => _status switch
     {
-        CopyStatus.Done      => "#388E3C",
+        CopyStatus.Done      => string.IsNullOrEmpty(_warning) ? "#388E3C" : "#F57C00",
         CopyStatus.Error     => "#C62828",
         CopyStatus.Cancelled => "#F57C00",
         _                    => "#555555"

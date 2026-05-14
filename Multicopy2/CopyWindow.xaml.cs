@@ -64,10 +64,15 @@ public partial class CopyWindow : Window
 
             if (_setName && !_cts.IsCancellationRequested)
             {
-                foreach (var drive in _drives)
+                for (int i = 0; i < _drives.Count; i++)
                 {
-                    try { drive.VolumeLabel = _volumeName; }
-                    catch { }
+                    var dp = DriveProgressItems[i];
+                    if (dp.Status != CopyStatus.Done) continue;
+                    try { _drives[i].VolumeLabel = _volumeName; }
+                    catch (Exception ex)
+                    {
+                        dp.Warning = $"label not set ({ex.Message})";
+                    }
                 }
             }
 

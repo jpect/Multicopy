@@ -14,7 +14,8 @@
 #>
 param(
     [string]$Version       = "1.0.0",
-    [string]$InnoSetupPath = ""
+    [string]$InnoSetupPath = "",
+    [switch]$SkipTests     = $false
 )
 
 $ErrorActionPreference = "Stop"
@@ -48,6 +49,21 @@ Then re-run this script.
     exit 1
 }
 
+# ── Run tests ─────────────────────────────────────────────────────────────────
+if (-not $SkipTests) {
+    Write-Host ""
+    Write-Host "  Running unit tests..." -ForegroundColor Cyan
+    & $dotnet test "$Root\Multicopy2.Tests\Multicopy2.Tests.csproj" --nologo --verbosity quiet
+    if ($LASTEXITCODE -ne 0) { Write-Error "Unit tests failed"; exit 1 }
+    Write-Host "  Unit tests PASSED" -ForegroundColor Green
+
+    Write-Host ""
+    Write-Host "  Running UI tests (FlaUI)..." -ForegroundColor Cyan
+    & $dotnet test "$Root\Multicopy2.UiTests\Multicopy2.UiTests.csproj" --nologo --verbosity quiet
+    if ($LASTEXITCODE -ne 0) { Write-Error "UI tests failed"; exit 1 }
+    Write-Host "  UI tests PASSED" -ForegroundColor Green
+}
+
 # ── Publish (framework-dependent, win-x64) ────────────────────────────────────
 Write-Host ""
 Write-Host "  Publishing Multicopy2 $Version (framework-dependent, win-x64)..." -ForegroundColor Cyan
@@ -69,6 +85,37 @@ if (-not (Test-Path $exePath)) {
 }
 
 Write-Host "  Published to $publishDir" -ForegroundColor Green
+
+# ── Smoke test ────────────────────────────────────────────────────────────────
+Write-Host ""
+Write-Host "  Running smoke test (--self-test)..." -ForegroundColor Cyan
+
+$p = New-Object System.Diagnostics.Process
+$p.StartInfo.FileName = $exePath
+$p.StartInfo.Arguments = "--self-test"
+$p.StartInfo.UseShellExecute = $false
+$p.StartInfo.RedirectStandardOutput = $true
+$p.StartInfo.RedirectStandardError = $true
+$null = $p.Start()
+$completed = $p.WaitForExit(15000)
+if (-not $completed) {
+    try { $p.Kill() } catch {}
+    Write-Error "Smoke test TIMED OUT after 15s — likely a hang in startup"
+    exit 1
+}
+$stdout = $p.StandardOutput.ReadToEnd()
+$stderr = $p.StandardError.ReadToEnd()
+
+if ($p.ExitCode -ne 0 -or $stdout -notmatch "PASSED") {
+    Write-Host "  Smoke test FAILED (exit $($p.ExitCode))" -ForegroundColor Red
+    Write-Host "  --- stdout ---" -ForegroundColor Red
+    Write-Host $stdout
+    Write-Host "  --- stderr ---" -ForegroundColor Red
+    Write-Host $stderr
+    Write-Error "Smoke test failed — refusing to build installer with broken app"
+    exit 1
+}
+Write-Host "  Smoke test PASSED" -ForegroundColor Green
 
 # ── Compile installer ─────────────────────────────────────────────────────────
 Write-Host ""

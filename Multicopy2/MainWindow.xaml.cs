@@ -82,6 +82,20 @@ public partial class MainWindow : Window
             if (confirm != MessageBoxResult.Yes) return;
         }
 
+        if (setName && volName.Length > 11)
+        {
+            var lengthWarn = MessageBox.Show(
+                $"Volume name '{volName}' is {volName.Length} characters.\n\n" +
+                "Most USB drives use FAT32 or exFAT, which only support up to 11 characters " +
+                "for volume names. Drives that reject the name will keep their existing label " +
+                "(the copy still succeeds).\n\nContinue anyway?",
+                "Volume name may be too long",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (lengthWarn != MessageBoxResult.Yes) return;
+        }
+
         var copyWindow = new CopyWindow(sourcePath, selectedDrives, erase, overwrite, setName, volName, this);
         copyWindow.ShowDialog();
     }
