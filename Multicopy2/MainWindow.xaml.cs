@@ -1,9 +1,8 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
-using System.Windows.Forms;
+using Microsoft.Win32;
 using Multicopy2.Models;
-using MessageBox = System.Windows.MessageBox;
 
 namespace Multicopy2;
 
@@ -21,14 +20,13 @@ public partial class MainWindow : Window
 
     private void BrowseSource_Click(object sender, RoutedEventArgs e)
     {
-        using var dialog = new FolderBrowserDialog
+        var dialog = new OpenFolderDialog
         {
-            Description = "Select the source folder to copy",
-            ShowNewFolderButton = false
+            Title = "Select the source folder to copy"
         };
 
-        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            SourceBox.Text = dialog.SelectedPath;
+        if (dialog.ShowDialog(this) == true)
+            SourceBox.Text = dialog.FolderName;
     }
 
     private void Rescan_Click(object sender, RoutedEventArgs e) => RefreshDrives();

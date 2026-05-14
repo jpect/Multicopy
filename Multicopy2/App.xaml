@@ -73,7 +73,6 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="#757575"/>
             <Setter Property="Margin" Value="0,0,0,5"/>
-            <Setter Property="LetterSpacing" Value="0.5"/>
         </Style>
 
         <Style TargetType="ProgressBar">
