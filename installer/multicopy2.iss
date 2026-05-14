@@ -1,6 +1,6 @@
 #define MyAppName      "Multicopy2"
-#define MyAppPublisher "Epic CleanTec"
-#define MyAppURL       "https://epiccleantec.com"
+#define MyAppPublisher "Justin Pulley"
+#define MyAppURL       "https://github.com/jpect/Multicopy"
 #define MyAppExeName   "Multicopy2.exe"
 #define MyAppId        "{E5872B6C-ACC9-4074-9D70-7FC761A58BA6}"
 
