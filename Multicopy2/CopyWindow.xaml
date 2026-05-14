@@ -87,9 +87,9 @@
                                                Foreground="#1976D2"/>
                                     <TextBlock Grid.Column="2"
                                                FontSize="11" Foreground="#757575">
-                                        <Run Text="{Binding BytesCopiedDisplay}"/>
+                                        <Run Text="{Binding BytesCopiedDisplay, Mode=OneWay}"/>
                                         <Run Text=" / "/>
-                                        <Run Text="{Binding TotalBytesDisplay}"/>
+                                        <Run Text="{Binding TotalBytesDisplay, Mode=OneWay}"/>
                                     </TextBlock>
                                 </Grid>
 
