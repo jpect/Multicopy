@@ -2,7 +2,6 @@
 #define MyAppPublisher "Justin Pulley"
 #define MyAppURL       "https://github.com/jpect/Multicopy"
 #define MyAppExeName   "Multicopy2.exe"
-#define MyAppId        "{E5872B6C-ACC9-4074-9D70-7FC761A58BA6}"
 
 ; Version injected by build-installer.ps1 via /DMyAppVersion=x.y.z
 ; Fallback for compiling manually in Inno Setup IDE:
@@ -11,7 +10,7 @@
 #endif
 
 [Setup]
-AppId={#MyAppId}
+AppId={{E5872B6C-ACC9-4074-9D70-7FC761A58BA6}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
@@ -89,6 +88,8 @@ begin
 end;
 
 function InitializeSetup: Boolean;
+var
+  ErrorCode: Integer;
 begin
   Result := True;
 
@@ -100,7 +101,7 @@ begin
       '"Windows Desktop Runtime x64" package and re-run this installer.',
       mbError, MB_OKCANCEL) = IDOK then
     begin
-      ShellExec('open', 'https://dotnet.microsoft.com/en-us/download/dotnet/9.0', '', '', SW_SHOW, ewNoWait, i);
+      ShellExec('open', 'https://dotnet.microsoft.com/en-us/download/dotnet/9.0', '', '', SW_SHOW, ewNoWait, ErrorCode);
     end;
     Result := False;
   end;

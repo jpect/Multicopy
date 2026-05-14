@@ -31,8 +31,10 @@ if (-not (Test-Path $dotnet)) {
 # ── Locate Inno Setup ─────────────────────────────────────────────────────────
 if (-not $InnoSetupPath) {
     foreach ($c in @(
-        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
-        "C:\Program Files\Inno Setup 6\ISCC.exe"
+        "C:\Program Files\Inno Setup 7\ISCC.exe",
+        "C:\Program Files (x86)\Inno Setup 7\ISCC.exe",
+        "C:\Program Files\Inno Setup 6\ISCC.exe",
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
     )) {
         if (Test-Path $c) { $InnoSetupPath = $c; break }
     }
@@ -54,7 +56,6 @@ Write-Host "  Publishing Multicopy2 $Version (framework-dependent, win-x64)..." 
     -c Release `
     -r win-x64 `
     --no-self-contained `
-    -p:PublishReadyToRun=true `
     -p:Version=$Version
 
 if ($LASTEXITCODE -ne 0) { Write-Error "dotnet publish failed"; exit 1 }
