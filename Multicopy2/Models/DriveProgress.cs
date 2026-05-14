@@ -22,7 +22,8 @@ public class DriveProgress : INotifyPropertyChanged
     {
         Drive = drive;
         DriveLetter = drive.Name.TrimEnd('\\');
-        VolumeLabel = string.IsNullOrWhiteSpace(drive.VolumeLabel) ? "No Label" : drive.VolumeLabel;
+        try { VolumeLabel = string.IsNullOrWhiteSpace(drive.VolumeLabel) ? "No Label" : drive.VolumeLabel; }
+        catch { VolumeLabel = "No Label"; }
     }
 
     public DriveInfo Drive { get; }

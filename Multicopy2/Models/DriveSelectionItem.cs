@@ -24,11 +24,18 @@ public class DriveSelectionItem : INotifyPropertyChanged
     {
         get
         {
-            string letter = Drive.Name.TrimEnd('\\');
-            string label = string.IsNullOrWhiteSpace(Drive.VolumeLabel) ? "No Label" : Drive.VolumeLabel;
-            string free = FormatBytes(Drive.AvailableFreeSpace);
-            string total = FormatBytes(Drive.TotalSize);
-            return $"{letter}  —  {label}  ({free} free of {total})";
+            try
+            {
+                string letter = Drive.Name.TrimEnd('\\');
+                string label = string.IsNullOrWhiteSpace(Drive.VolumeLabel) ? "No Label" : Drive.VolumeLabel;
+                string free = FormatBytes(Drive.AvailableFreeSpace);
+                string total = FormatBytes(Drive.TotalSize);
+                return $"{letter}  —  {label}  ({free} free of {total})";
+            }
+            catch
+            {
+                return $"{Drive.Name.TrimEnd('\\')}  —  (not ready)";
+            }
         }
     }
 

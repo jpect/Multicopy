@@ -54,35 +54,46 @@ public partial class CopyWindow : Window
         SubHeaderText.Text = $"Source: {_sourcePath}";
         SummaryText.Text = $"0 of {count} complete";
 
-        var tasks = _drives.Select((drive, i) => RunCopyForDrive(drive, DriveProgressItems[i])).ToList();
-
-        await Task.WhenAll(tasks);
-
-        _finished = true;
-
-        if (_setName && !_cts.IsCancellationRequested)
+        try
         {
-            foreach (var drive in _drives)
+            var tasks = _drives.Select((drive, i) => RunCopyForDrive(drive, DriveProgressItems[i])).ToList();
+
+            await Task.WhenAll(tasks);
+
+            _finished = true;
+
+            if (_setName && !_cts.IsCancellationRequested)
             {
-                try { drive.VolumeLabel = _volumeName; }
-                catch { /* VolumeLabel requires admin; best-effort */ }
+                foreach (var drive in _drives)
+                {
+                    try { drive.VolumeLabel = _volumeName; }
+                    catch { }
+                }
             }
+
+            int done      = DriveProgressItems.Count(d => d.Status == CopyStatus.Done);
+            int errors    = DriveProgressItems.Count(d => d.Status == CopyStatus.Error);
+            int cancelled = DriveProgressItems.Count(d => d.Status == CopyStatus.Cancelled);
+
+            HeaderText.Text = errors == 0 && cancelled == 0
+                ? $"Complete — {done} drive{(done != 1 ? "s" : "")} copied"
+                : $"Finished with issues";
+
+            SummaryText.Text = $"{done}/{count} done" +
+                (errors > 0    ? $"  ·  {errors} error{(errors != 1 ? "s" : "")}" : "") +
+                (cancelled > 0 ? $"  ·  {cancelled} cancelled" : "");
         }
-
-        int done      = DriveProgressItems.Count(d => d.Status == CopyStatus.Done);
-        int errors    = DriveProgressItems.Count(d => d.Status == CopyStatus.Error);
-        int cancelled = DriveProgressItems.Count(d => d.Status == CopyStatus.Cancelled);
-
-        HeaderText.Text = errors == 0 && cancelled == 0
-            ? $"Complete — {done} drive{(done != 1 ? "s" : "")} copied"
-            : $"Finished with issues";
-
-        SummaryText.Text = $"{done}/{count} done" +
-            (errors > 0    ? $"  ·  {errors} error{(errors != 1 ? "s" : "")}" : "") +
-            (cancelled > 0 ? $"  ·  {cancelled} cancelled" : "");
-
-        CancelBtn.IsEnabled = false;
-        CloseBtn.IsEnabled = true;
+        catch (Exception ex)
+        {
+            _finished = true;
+            HeaderText.Text = "Error during copy";
+            SummaryText.Text = ex.Message;
+        }
+        finally
+        {
+            CancelBtn.IsEnabled = false;
+            CloseBtn.IsEnabled = true;
+        }
     }
 
     private async Task RunCopyForDrive(DriveInfo drive, DriveProgress dp)
